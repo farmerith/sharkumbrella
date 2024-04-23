@@ -1,0 +1,32 @@
+#! /bin/python -B
+
+import os
+import sys
+import json
+import argparse
+from pathlib import Path
+
+def parse_stdin():
+    return [i.strip() for i in sys.stdin.readlines()] if not sys.stdin.isatty() else None
+
+if __name__ == '__main__':
+    HOME = os.path.expanduser('~')
+    DATABASE = Path(f'{HOME}/.local/share/sharkumbrella/data.json')
+
+    try:
+        with open(DATABASE, 'r') as f:
+            data = json.load(f)
+    except FileNotFoundError:
+        sys.exit()
+    
+    parser = argparse.ArgumentParser()
+    parser.add_argument('input', nargs='*', default=parse_stdin()) 
+    args = parser.parse_args()
+
+    for path in args.input:
+        stem = Path(path).stem
+
+        try: 
+            print(data[stem]['context'])
+        except KeyError:
+            continue

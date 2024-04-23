@@ -1,0 +1,21 @@
+
+# sharkumbrella
+super+Up
+    set-window-title
+
+super+q
+    alacritty -e vim "$(catch)" -c 'startinsert' 
+
+super+r
+    xsel -po > "$(catch).md" && notify-send 'great job!'
+
+## screenshots
+super+s
+    maim -s "$(catch).png" && notify-send 'great job!'
+
+super+shift+s
+    maim -s | xclip -selection clipboard -t image/png
+
+## anki
+super+a
+    gui-add-cards

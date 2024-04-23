@@ -1,0 +1,29 @@
+#! /bin/python -B
+
+import os
+import random
+import subprocess
+from datetime import datetime
+
+def get_all_files(directory):
+    all_files = []
+    for root, dirs, files in os.walk(directory):
+        for file in files:
+            all_files.append(os.path.join(root, file))
+    return all_files
+
+def set_last_modified(file):
+    timestamp = datetime.now().timestamp()
+    os.utime(file, (timestamp, timestamp))
+
+if __name__ == '__main__':
+    files = get_all_files('.')
+    random.shuffle(files)
+
+    for file in files:
+        file_date = datetime.fromtimestamp(os.path.getatime(file)).date()
+        if file_date != datetime.now().date():
+            set_last_modified(file)
+            subprocess.run(['xdg-open', file])
+            print(file)
+            break

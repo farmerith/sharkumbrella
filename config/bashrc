@@ -1,0 +1,9 @@
+#! /bin/bash
+
+export PATH=$PATH:/home/$USER/bin:/home/$USER/bin/sharkumbrella/bin
+export CATCH_ALL=/home/$USER/000/catch-all
+
+# aliases
+alias n='next'
+alias r='recent'
+alias rcontext='recent | context'

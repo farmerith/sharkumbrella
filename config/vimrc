@@ -1,0 +1,8 @@
+
+" sharkumbrella 
+function! SetWindowTitle()
+    let title = expand('%:p')
+    call system('xdotool getactivewindow set_window --name "' . title . '"')
+endfunction
+
+autocmd VimEnter * call SetWindowTitle()
