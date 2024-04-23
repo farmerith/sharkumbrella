@@ -28,14 +28,11 @@ def safe_write(data, path):
         return path
 
 if __name__ == '__main__':
-    try:
-        CATCH_ALL = Path(os.environ['CATCH_ALL'])
-        CATCH_ALL.parent.mkdir(parents=True, exist_ok=True)
-    except KeyError:
-        print('ERROR: CATCH_ALL not set environment', file=sys.stderr)
-        sys.exit(1)
-
     HOME = os.path.expanduser('~')
+
+    CATCH_ALL = Path(f'{HOME}/sharkumbrella/catch-all')
+    CATCH_ALL.mkdir(parents=True, exist_ok=True)
+
     DATABASE = Path(f'{HOME}/.local/share/sharkumbrella/data.json')
     DATABASE.parent.mkdir(parents=True, exist_ok=True)
 

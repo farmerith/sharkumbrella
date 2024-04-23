@@ -7,11 +7,11 @@ super+q
     alacritty -e vim "$(catch)" -c 'startinsert' 
 
 super+r
-    xsel -po > "$(catch)" && notify-send 'great job!'
+    xsel -po > "$(catch)" && notify-send "great job!"
 
 ## screenshots
 super+s
-    maim -s "$(catch).png" && notify-send 'great job!'
+    maim -s "$(catch).png" && notify-send "great job!"
 
 super+shift+s
     maim -s | xclip -selection clipboard -t image/png

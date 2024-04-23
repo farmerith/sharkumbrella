@@ -1,0 +1,60 @@
+#! /bin/python -B
+
+import os
+import sys
+import json
+import shutil
+import tempfile
+from pathlib import Path
+from functools import cache
+
+def recursive_scandir(directory):
+    for entry in os.scandir(directory):
+        if entry.is_dir(follow_symlinks=False):
+            yield from recursive_scandir(entry.path)
+            continue 
+
+        yield entry 
+
+def safe_write(data, path):
+    with tempfile.TemporaryDirectory() as temp_dir:
+        temp_file = Path(temp_dir) / path.name
+        
+        with temp_file.open('w', encoding='utf-8') as f:
+            json.dump(data, f)
+        
+        path.parent.mkdir(parents=True, exist_ok=True)
+        shutil.move(str(temp_file), str(path))
+
+        return path
+
+def remove_deleted(data, collection):
+    if not collection.is_dir():
+        print('collection not found', file=sys.stderr)
+        sys.exit(1)
+
+    remove = [stem for stem in data if stem.strip() not in [Path(path).stem.strip() for path in recursive_scandir(collection)]]
+
+    for stem in remove:
+        print(f'yeeted {stem}')
+        del data[stem]
+
+    return data
+
+def remove_duplicates(data):
+    return {k: v for k, v in data.items()}
+
+if __name__ == '__main__':
+    HOME = os.path.expanduser('~')
+    DATABASE = Path(f'{HOME}/.local/share/sharkumbrella/data.json')
+    COLLECTION = Path(f'{HOME}/sharkumbrella')
+
+    try:
+        with open(DATABASE, 'r') as f:
+            data = json.load(f) 
+    except FileNotFoundError:
+        sys.exit()
+
+    data = remove_deleted(data, COLLECTION)
+    data = remove_duplicates(data)
+    safe_write(data, DATABASE)
