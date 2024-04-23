@@ -7,7 +7,7 @@ super+q
     alacritty -e vim "$(catch)" -c 'startinsert' 
 
 super+r
-    xsel -po > "$(catch).md" && notify-send 'great job!'
+    xsel -po > "$(catch)" && notify-send 'great job!'
 
 ## screenshots
 super+s

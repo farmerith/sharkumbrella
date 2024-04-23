@@ -3,7 +3,7 @@
 text/plain=nvim.desktop
 inode/x-empty=nvim.desktop
 text/x-shellscript=nvim.desktop
-text/markdown=marktext.desktop
+text/markdown=nvim.desktop
 image/png=nsxiv.desktop
 application/pdf=org.pwmt.zathura-pdf-mupdf.desktop
 video/mp4=mpv.desktop

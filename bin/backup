@@ -1,0 +1,9 @@
+#! /bin/bash
+
+mkdir -p "/home/$USER/backup"
+cp "/home/$USER/.local/share/sharkumbrella/data.json" "/home/$USER/000/."
+tar czf "/home/$USER/backup/sharkumbrella-$(date +%s).tar.gz" "/home/$USER/000"
+rm "/home/$USER/000/data.json"
+
+# TODO
+# 000 is the collection and it should be set through the environment
