@@ -1,29 +1,56 @@
 #! /bin/python -B
 
 import os
+import sys
 import random
 import subprocess
-from datetime import datetime
+from pathlib import Path
+from datetime import datetime, timedelta
+
+import shum
+
+def fuzz():
+    return random.uniform(0.9, 1.1)
 
 def get_all_files(directory):
-    all_files = []
-    for root, dirs, files in os.walk(directory):
-        for file in files:
-            all_files.append(os.path.join(root, file))
-    return all_files
+    return [os.path.join(root, file) for root, _, files in os.walk(directory) for file in files]
 
-def set_last_modified(file):
+def set_last_modified(path):
     timestamp = datetime.now().timestamp()
-    os.utime(file, (timestamp, timestamp))
+    os.utime(path, (timestamp, timestamp))
+
+def get_next_due(prev_due):
+    prev_interval = max(1, (datetime.now() - datetime.fromtimestamp(prev_due)).days)
+    next_interval = prev_interval * shum.A_FACTOR * fuzz() 
+    return (datetime.now() + timedelta(days=next_interval)).timestamp()
+
+def update_scheduling(data, path):
+    prev_due = data[path.stem].get('prev_due', datetime.now().timestamp())
+    data[path.stem]['next_due'] = get_next_due(prev_due) 
+    data[path.stem]['prev_due'] = datetime.now().timestamp()
+    return data
 
 if __name__ == '__main__':
     files = get_all_files('.')
     random.shuffle(files)
 
-    for file in files:
-        file_date = datetime.fromtimestamp(os.path.getatime(file)).date()
-        if file_date != datetime.now().date():
-            set_last_modified(file)
-            subprocess.run(['xdg-open', file])
-            print(file)
-            break
+    for path in files:
+        path = Path(path)
+
+        atime = datetime.fromtimestamp(os.path.getatime(path)).date()
+        if atime == datetime.now().date():
+            continue
+
+        data = shum.load_data()
+        if path.stem in data:
+            next_due = data.get('next_due')
+            if next_due and datetime.fromtimestamp(next_due).date() < datetime.now().date():
+                continue
+
+            data = update_scheduling(data, path)
+            shum.safe_write(data, shum.DATABASE)
+
+        set_last_modified(path)
+        subprocess.run(['xdg-open', str(path)])
+        print(path)
+        break

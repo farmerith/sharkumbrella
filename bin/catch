@@ -4,10 +4,10 @@ import os
 import sys
 import uuid
 import json
-import shutil
-import tempfile
 import subprocess 
 from pathlib import Path
+
+import shum
 
 def get_window_title():
     try:
@@ -15,35 +15,9 @@ def get_window_title():
     except (subprocess.CalledProcessError, FileNotFoundError):
         return None
 
-def safe_write(data, path):
-    with tempfile.TemporaryDirectory() as temp_dir:
-        temp_file = Path(temp_dir) / path.name
-        
-        with temp_file.open('w', encoding='utf-8') as f:
-            json.dump(data, f)
-        
-        path.parent.mkdir(parents=True, exist_ok=True)
-        shutil.move(str(temp_file), str(path))
-
-        return path
-
 if __name__ == '__main__':
-    HOME = os.path.expanduser('~')
-
-    CATCH_ALL = Path(f'{HOME}/sharkumbrella/catch-all')
-    CATCH_ALL.mkdir(parents=True, exist_ok=True)
-
-    DATABASE = Path(f'{HOME}/.local/share/sharkumbrella/data.json')
-    DATABASE.parent.mkdir(parents=True, exist_ok=True)
-
-    try:
-        with open(DATABASE, 'r') as f:
-            data = json.load(f) 
-    except FileNotFoundError:
-        data = {}
-    
+    data = shum.load_data()
     stem = str(uuid.uuid4()) 
     data[stem] = {'context': get_window_title()}
-    safe_write(data, DATABASE)
-
-    print(CATCH_ALL / stem)
+    shum.safe_write(data, shum.DATABASE)
+    print(shum.CATCH_ALL / stem)
