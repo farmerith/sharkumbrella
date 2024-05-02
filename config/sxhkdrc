@@ -9,6 +9,9 @@ super+q
 super+r
     xsel -po > "$(catch)" && notify-send "great job!"
 
+super+g
+    flashcard-gen
+
 ## screenshots
 super+s
     maim -s "$(catch).png" && notify-send "great job!"

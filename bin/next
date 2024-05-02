@@ -43,6 +43,10 @@ if __name__ == '__main__':
 
         data = shum.load_data()
         if path.stem in data:
+            if data[stem].get('archived'):
+                print('archived')
+                continue
+
             next_due = data.get('next_due')
             if next_due and datetime.fromtimestamp(next_due).date() < datetime.now().date():
                 continue
