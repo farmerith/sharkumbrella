@@ -49,6 +49,7 @@ if __name__ == '__main__':
 
             data = update_scheduling(data, path)
             shum.safe_write(data, shum.DATABASE)
+            print('updated database')
 
         set_last_modified(path)
         subprocess.run(['xdg-open', str(path)])
