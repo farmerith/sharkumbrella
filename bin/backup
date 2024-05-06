@@ -2,5 +2,5 @@
 
 mkdir -p "/home/$USER/backup"
 cp "/home/$USER/.local/share/sharkumbrella/data.json" "/home/$USER/sharkumbrella/."
-tar czf "/home/$USER/backup/sharkumbrella-$(date +%s).tar.gz" "/home/$USER/sharkumbrella"
+tar -czf "/home/$USER/backup/sharkumbrella-$(date +%s).tar.gz" --exclude "/home/$USER/sharkumbrella/public" "/home/$USER/sharkumbrella"  
 rm "/home/$USER/sharkumbrella/data.json"
