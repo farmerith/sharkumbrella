@@ -11,8 +11,8 @@ import shum
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
+    parser.add_argument('interval', type=int)
     parser.add_argument('input', nargs='*', default=shum.parse_stdin()) 
-    parser.add_argument('--interval', '-i', type=int)
     args = parser.parse_args()
 
     data = shum.load_data()
@@ -27,11 +27,7 @@ if __name__ == '__main__':
         if not entry in data: 
             data[entry] = {'timestamp': datetime.now().timestamp()}
 
-        if args.interval:
-            next_due_interval = args.interval
-        else:
-            next_due_interval = random.randint(15, 30)
-
+        next_due_interval = args.interval
         data[entry]['next_due'] = (datetime.now() + timedelta(days=next_due_interval)).timestamp()
 
         # resets interval (to prevent huge intervals after delaying)
