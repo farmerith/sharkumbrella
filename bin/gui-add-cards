@@ -1,0 +1,25 @@
+#! /bin/python -B
+
+import sys
+import requests
+import subprocess
+
+try:
+    selection = subprocess.run(['xsel', '-po'], capture_output=True, text=True).stdout.strip()
+except Exception as e:
+    print(f'error getting selection: {e}', file=sys.stderr)
+    sys.exit(1)
+
+payload = {"action": "guiAddCards", "version": 6, "params": {"note": {"deckName": "000", "modelName": "Cloze", "fields": {"Text": selection,}}}}
+url = "http://localhost:8765"
+
+try:
+    response = requests.post(url, json=payload)
+    response.raise_for_status()
+    result = response.json()
+    if result.get('error'):
+        print(f'Error adding note: {result['error']}', file=sys.stderr)
+        sys.exit(1)
+except requests.exceptions.RequestException as e:
+    print(f'Error communicating with AnkiConnect: {e}', file=sys.stderr)
+    sys.exit(1)

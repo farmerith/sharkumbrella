@@ -1,0 +1,28 @@
+#! /bin/python -B
+
+import sys
+import argparse
+from pathlib import Path
+
+import shum
+
+if __name__ == '__main__':
+    data = shum.load_data()
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument('input', nargs='*', default=shum.parse_stdin()) 
+    args = parser.parse_args()
+
+    for path in args.input:
+        path = Path(path).resolve()
+        entry = shum.relative_path(path)
+
+        if not shum.is_in_coll(path):
+            print('not in database')
+            continue
+
+        if entry not in data:
+            data[entry] = {'timestamp': datetime.now().timestamp()}
+
+        data[entry]['archived'] = True
+        shum.safe_write(data, shum.DATABASE)

@@ -1,0 +1,31 @@
+#! /bin/python -B
+
+import os
+import sys
+import random
+import argparse
+from pathlib import Path
+from datetime import datetime, timedelta
+
+import shum
+
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser()
+    parser.add_argument('priority', choices=('high', 'medium', 'low'))
+    parser.add_argument('input', nargs='*', default=shum.parse_stdin()) 
+    args = parser.parse_args()
+
+    data = shum.load_data()
+
+    for path in args.input:
+        path = Path(path).resolve()
+        entry = shum.relative_path(path)
+
+        if not shum.is_in_coll(path):
+            continue
+
+        if not entry in data: 
+            data[entry] = {'timestamp': datetime.now().timestamp()}
+
+        data[entry]['priority'] = args.priority 
+        shum.safe_write(data, shum.DATABASE)

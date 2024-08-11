@@ -1,0 +1,25 @@
+#! /bin/python -B
+
+import os
+import sys
+import argparse
+from pathlib import Path
+
+import shum
+
+if __name__ == '__main__':
+    data = shum.load_data()
+    if not data: sys.exit()
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument('input', nargs='*', default=shum.parse_stdin()) 
+    args = parser.parse_args()
+
+    for path in args.input:
+        path = Path(path).resolve()
+        entry = shum.relative_path(path)
+
+        try: 
+            print(data[entry]['context'])
+        except KeyError:
+            continue

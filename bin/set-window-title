@@ -1,0 +1,4 @@
+#! /bin/bash
+
+title=$(rofi -dmenu -p "title"); [[ -z "$title" ]] && exit
+xdotool getactivewindow set_window --name "$title" 

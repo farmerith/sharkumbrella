@@ -1,0 +1,33 @@
+#! /bin/python -B
+
+import os
+import sys
+from pathlib import Path
+
+import shum
+
+def remove_deleted(data, collection):
+    if not collection.is_dir():
+        print('collection not found', file=sys.stderr)
+        sys.exit(1)
+
+    remove = [entry for entry in data if entry not in [shum.relative_path(Path(path).resolve()) for path in shum.recursive_scandir(collection)]]
+
+    for entry in remove:
+        print(f'removed entry: {entry}')
+        del data[entry]
+
+    return data
+
+def remove_duplicates(data):
+    return {k: v for k, v in data.items()}
+
+if __name__ == '__main__':
+    data = shum.load_data()
+
+    if not data: 
+        sys.exit()
+
+    data = remove_deleted(data, shum.COLLECTION)
+    data = remove_duplicates(data)
+    shum.safe_write(data, shum.DATABASE)

@@ -1,0 +1,42 @@
+#! /bin/python -B
+
+import os
+import sys
+import random
+import subprocess
+from pathlib import Path
+from datetime import datetime, timedelta
+
+import shum
+
+def get_all_files(directory):
+    return [os.path.join(root, file) for root, _, files in os.walk(directory) for file in files]
+
+if __name__ == '__main__':
+    files = get_all_files(shum.COLLECTION)
+    data = shum.load_data()
+    due = []
+
+    for path in files:
+        path = Path(path).resolve() # resolve?
+        entry = shum.relative_path(path)
+
+        if not shum.is_in_coll(path):
+            continue
+
+        atime = datetime.fromtimestamp(os.path.getatime(path)).date()
+        if atime == datetime.now().date():
+            continue
+
+        if entry not in data:
+            print(path)
+            continue
+        
+        if data[entry].get('archived'):
+            continue
+
+        next_due = data[entry].get('next_due')
+        if next_due is not None and datetime.fromtimestamp(next_due).date() > datetime.now().date():
+            continue
+
+        print(path)

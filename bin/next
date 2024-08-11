@@ -1,0 +1,102 @@
+#! /bin/python -B
+
+import os
+import sys
+import random
+import subprocess
+from pathlib import Path
+from datetime import datetime, timedelta
+
+import shum
+
+RANDOMNESS_FACTOR = 0.5
+
+def fuzz():
+    return random.uniform(0.9, 1.1)
+
+def get_all_files(directory):
+    return [os.path.join(root, file) for root, _, files in os.walk(directory) for file in files]
+
+def set_last_modified(path):
+    timestamp = datetime.now().timestamp()
+    os.utime(path, (timestamp, timestamp))
+
+def get_next_due(prev_due): # sm2 with a constant factor
+    prev_interval = max(1, (datetime.now() - datetime.fromtimestamp(prev_due)).days)
+    next_interval = prev_interval * shum.A_FACTOR * fuzz() 
+    return (datetime.now() + timedelta(days=next_interval)).timestamp()
+
+def update_scheduling(data, entry):
+    prev_due = data[entry].get('prev_due', datetime.now().timestamp())
+    data[entry]['next_due'] = get_next_due(prev_due)
+    data[entry]['prev_due'] = datetime.now().timestamp()
+    return data
+
+def priority_sort(files):
+    sorted_files = []
+
+    for path in files:
+        path = Path(path).resolve()
+        entry = shum.relative_path(path)
+
+        if not shum.is_in_coll(path):
+            continue
+
+        if random.random() <= RANDOMNESS_FACTOR:
+            sorted_files.append([random.uniform(0, 3), path])
+            continue
+
+        priority = data.get(entry, {}).get('priority', 'low')
+
+        if priority not in ('high', 'medium', 'low'):
+            priority = 'low'
+
+        if priority == 'low': r = [0, 1]   
+        elif priority == 'medium': r = [1, 2]
+        elif priority == 'high': r = [2, 3]
+        sorted_files.append([random.uniform(*r), path])
+
+    sorted_files.sort(reverse=True) 
+    return [path for priority, path in sorted_files]
+
+if __name__ == '__main__':
+    files = get_all_files(shum.COLLECTION)
+    data = shum.load_data()
+
+    for path in priority_sort(files):
+        entry = shum.relative_path(path)
+
+        if not shum.is_in_coll(path):
+            continue
+
+        if entry not in data:
+            data[entry] = {'timestamp': datetime.now().timestamp()}
+
+        atime = datetime.fromtimestamp(os.path.getatime(path)).date()
+        if atime == datetime.now().date():
+            continue
+        
+        if data[entry].get('archived'):
+            continue
+
+        next_due = data[entry].get('next_due')
+        if next_due is not None and datetime.fromtimestamp(next_due).date() > datetime.now().date():
+            continue
+
+        data = update_scheduling(data, entry)
+        shum.safe_write(data, shum.DATABASE)
+
+        set_last_modified(path)
+        subprocess.run(['xdg-open', str(path)])
+
+        with open('/tmp/capture.out', 'a') as f:
+            f.write(f'{str(path)}\n')
+
+        next_due = data[entry].get('next_due')
+        next_due_readable = datetime.fromtimestamp(next_due).strftime('%Y/%m/%d') if next_due else None
+        print(f'next_due={next_due_readable}')
+        priority = data[entry].get('priority', 'low')
+        print(f'priority={priority}')
+        print(path)
+
+        break

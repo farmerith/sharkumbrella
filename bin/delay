@@ -1,0 +1,41 @@
+#! /bin/python -B
+
+import os
+import sys
+import random
+import argparse
+from pathlib import Path
+from datetime import datetime, timedelta
+
+import shum
+
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser()
+    parser.add_argument('input', nargs='*', default=shum.parse_stdin()) 
+    parser.add_argument('--interval', '-i', type=int)
+    args = parser.parse_args()
+
+    data = shum.load_data()
+
+    for path in args.input:
+        path = Path(path).resolve()
+        entry = shum.relative_path(path)
+
+        if not shum.is_in_coll(path):
+            continue
+
+        if not entry in data: 
+            data[entry] = {'timestamp': datetime.now().timestamp()}
+
+        if args.interval:
+            next_due_interval = args.interval
+        else:
+            next_due_interval = random.randint(15, 30)
+
+        data[entry]['next_due'] = (datetime.now() + timedelta(days=next_due_interval)).timestamp()
+
+        # resets interval (to prevent huge intervals after delaying)
+        if data[entry].get('prev_due'):
+            del data[entry]['prev_due']
+
+        shum.safe_write(data, shum.DATABASE)

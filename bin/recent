@@ -1,0 +1,3 @@
+#! /bin/bash
+
+echo $(find "$COLLECTION" -type f -printf '%T@ %p\n' | sort -n | tail -1 | cut -d' ' -f2-)
