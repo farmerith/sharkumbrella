@@ -32,7 +32,7 @@ if __name__ == '__main__':
 
     data = shum.load_data()
 
-    next_due = (datetime.now() + timedelta(days=random.randint(3, 7))).timestamp()
+    next_due = (datetime.now() + timedelta(days=random.randint(5, 7))).timestamp()
     data[entry] = {'timestamp': datetime.now().timestamp(),
                    'context': get_window_title().lower(), 
                    'next_due': next_due}

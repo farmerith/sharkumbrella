@@ -3,6 +3,8 @@
 import os
 import sys
 import random
+import hashlib
+import base64
 import subprocess
 from pathlib import Path
 from datetime import datetime, timedelta
@@ -10,6 +12,7 @@ from datetime import datetime, timedelta
 import shum
 
 RANDOMNESS_FACTOR = 0.5
+MAX_INTERVAL = 90 
 
 def fuzz():
     return random.uniform(0.9, 1.1)
@@ -21,14 +24,19 @@ def set_last_modified(path):
     timestamp = datetime.now().timestamp()
     os.utime(path, (timestamp, timestamp))
 
-def get_next_due(prev_due): # sm2 with a constant factor
-    prev_interval = max(1, (datetime.now() - datetime.fromtimestamp(prev_due)).days)
-    next_interval = prev_interval * shum.A_FACTOR * fuzz() 
+def get_next_due(next_due, prev_due): # sm2 with a constant factor
+    prev_interval = (datetime.fromtimestamp(next_due) - datetime.fromtimestamp(prev_due)).days
+    prev_interval = max(1, prev_interval)
+
+    next_interval = prev_interval * shum.A_FACTOR
+    next_interval = min(next_interval, MAX_INTERVAL) # max_interval 
+    next_interval *= fuzz() # fuzz
     return (datetime.now() + timedelta(days=next_interval)).timestamp()
 
 def update_scheduling(data, entry):
     prev_due = data[entry].get('prev_due', datetime.now().timestamp())
-    data[entry]['next_due'] = get_next_due(prev_due)
+    next_due = data[entry].get('next_due', datetime.now().timestamp())
+    data[entry]['next_due'] = get_next_due(next_due, prev_due)
     data[entry]['prev_due'] = datetime.now().timestamp()
     return data
 
@@ -66,6 +74,7 @@ if __name__ == '__main__':
     for path in priority_sort(files):
         entry = shum.relative_path(path)
 
+        # checks 
         if not shum.is_in_coll(path):
             continue
 
@@ -84,19 +93,38 @@ if __name__ == '__main__':
             continue
 
         data = update_scheduling(data, entry)
+
+        # update scheduling
         shum.safe_write(data, shum.DATABASE)
 
+        # system updates
         set_last_modified(path)
-        subprocess.run(['xdg-open', str(path)])
 
+        ## cat/ret script
         with open('/tmp/capture.out', 'a') as f:
             f.write(f'{str(path)}\n')
 
+        # open
+        subprocess.run(['xdg-open', str(path)])
+
+        # show stats
+        ## next_due
         next_due = data[entry].get('next_due')
         next_due_readable = datetime.fromtimestamp(next_due).strftime('%Y/%m/%d') if next_due else None
         print(f'next_due={next_due_readable}')
+
+        ## interval
+        prev_due = data[entry].get('prev_due', datetime.now().timestamp())
+        next_due = data[entry].get('next_due', datetime.now().timestamp())
+        interval = (datetime.fromtimestamp(next_due) - datetime.fromtimestamp(prev_due)).days
+        interval = max(1, interval)
+        print(f'interval={interval}')
+            
+        ## priority
         priority = data[entry].get('priority', 'low')
         print(f'priority={priority}')
+
+        ## path
         print(path)
 
         break
