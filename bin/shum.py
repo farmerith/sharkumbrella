@@ -3,12 +3,11 @@ import os
 import sys
 import json
 import shutil
+import hashlib
 import tempfile
 from pathlib import Path
 
 HOME = os.path.expanduser('~')
-DATABASE = Path(f'{HOME}/.local/share/sharkumbrella/data.json')
-DATABASE.parent.mkdir(parents=True, exist_ok=True)
 
 try:
     COLLECTION = Path(os.environ['COLLECTION'])
@@ -16,11 +15,28 @@ except KeyError:
     print('please set the COLLECTION variable in your environment', file=sys.stderr)
     sys.exit(1)
 
+try:
+    rel_coll = COLLECTION.relative_to(HOME)
+except ValueError:
+    rel_coll = COLLECTION
+
+def hash_(directory):
+    directory_bytes = directory.encode('utf-8')
+    hash_object = hashlib.sha256(directory_bytes)
+    hash_hex = hash_object.hexdigest()
+    return hash_hex
+
+coll_hash = hash_(str(rel_coll))
+DATABASE = Path(f'{HOME}/.local/share/sharkumbrella/{coll_hash}.json')
+DATABASE.parent.mkdir(parents=True, exist_ok=True)
+
 # constants
 A_FACTOR = 2.5
 
 def parse_stdin():
     return [i.strip() for i in sys.stdin.readlines()] if not sys.stdin.isatty() else None
+
+
 
 def recursive_scandir(directory):
     for entry in os.scandir(directory):
@@ -61,3 +77,7 @@ def is_in_coll(path):
         return True
     except ValueError:
         return False
+
+if __name__ == '__main__':
+    print(rel_coll)
+    print(DATABASE)

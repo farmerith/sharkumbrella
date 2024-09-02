@@ -1,8 +1,0 @@
-#! /bin/bash
-
-mkdir -p "/home/$USER/backup"
-mkdir -p "/home/$USER/000/sharkumbrella"
-cp "/home/$USER/.local/share/sharkumbrella/data.json" "/home/$USER/000/sharkumbrella/."
-cp "/home/$USER/.local/share/zathura/history" "/home/$USER/000/sharkumbrella/zathura-history"
-tar -czf "/home/$USER/backup/sharkumbrella-$(date +%s).tar.gz" "/home/$USER/000"  
-rm -r "/home/$USER/000/sharkumbrella"

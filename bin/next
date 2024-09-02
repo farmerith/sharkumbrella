@@ -3,19 +3,20 @@
 import os
 import sys
 import random
-import hashlib
-import base64
 import subprocess
 from pathlib import Path
 from datetime import datetime, timedelta
 
 import shum
 
-RANDOMNESS_FACTOR = 0.5
+RANDOMNESS_FACTOR = 0.3
 MAX_INTERVAL = 90 
 
-def fuzz():
-    return random.uniform(0.9, 1.1)
+def fuzz(interval):
+    if interval <= 10:
+        return interval * random.uniform(0.9, 1.5)
+
+    return interval * random.uniform(0.9, 1.1)
 
 def get_all_files(directory):
     return [os.path.join(root, file) for root, _, files in os.walk(directory) for file in files]
@@ -30,7 +31,7 @@ def get_next_due(next_due, prev_due): # sm2 with a constant factor
 
     next_interval = prev_interval * shum.A_FACTOR
     next_interval = min(next_interval, MAX_INTERVAL) # max_interval 
-    next_interval *= fuzz() # fuzz
+    next_interval = fuzz(next_interval) # fuzz
     return (datetime.now() + timedelta(days=next_interval)).timestamp()
 
 def update_scheduling(data, entry):
@@ -124,7 +125,11 @@ if __name__ == '__main__':
         priority = data[entry].get('priority', 'low')
         print(f'priority={priority}')
 
+        ## context
+        context = data[entry].get('context')
+        print(f'context={context}')
+
         ## path
-        print(path)
+        print(f'path={path}')
 
         break
