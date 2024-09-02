@@ -32,6 +32,7 @@ DATABASE.parent.mkdir(parents=True, exist_ok=True)
 
 # constants
 A_FACTOR = 2.5
+RANDOMNESS_FACTOR = 0.3
 
 def parse_stdin():
     return [i.strip() for i in sys.stdin.readlines()] if not sys.stdin.isatty() else None

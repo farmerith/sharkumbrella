@@ -9,8 +9,6 @@ from datetime import datetime, timedelta
 
 import shum
 
-RANDOMNESS_FACTOR = 0.3
-MAX_INTERVAL = 90 
 
 def fuzz(interval):
     if interval <= 10:
@@ -30,7 +28,6 @@ def get_next_due(next_due, prev_due): # sm2 with a constant factor
     prev_interval = max(1, prev_interval)
 
     next_interval = prev_interval * shum.A_FACTOR
-    next_interval = min(next_interval, MAX_INTERVAL) # max_interval 
     next_interval = fuzz(next_interval) # fuzz
     return (datetime.now() + timedelta(days=next_interval)).timestamp()
 
@@ -51,7 +48,7 @@ def priority_sort(files):
         if not shum.is_in_coll(path):
             continue
 
-        if random.random() <= RANDOMNESS_FACTOR:
+        if random.random() <= shum.RANDOMNESS_FACTOR:
             sorted_files.append([random.uniform(0, 3), path])
             continue
 
