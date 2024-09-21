@@ -9,7 +9,6 @@ from datetime import datetime, timedelta
 
 import shum
 
-
 def fuzz(interval):
     if interval <= 10:
         return interval * random.uniform(0.9, 1.5)
@@ -48,7 +47,7 @@ def priority_sort(files):
         if not shum.is_in_coll(path):
             continue
 
-        if random.random() <= shum.RANDOMNESS_FACTOR:
+        if random.random() < shum.RANDOMNESS_FACTOR:
             sorted_files.append([random.uniform(0, 3), path])
             continue
 

@@ -1,0 +1,69 @@
+#! /bin/python -B
+
+import sys
+import openai
+import base64
+from PIL import Image
+from io import BytesIO
+
+import prompt
+
+MODEL = 'gpt-4o-mini'
+TEMPERATURE = 1
+SIZE = (512, 512)
+
+def parse_stdin():
+    if not sys.stdin.isatty(): 
+        return sys.stdin.buffer.read()
+    return None
+
+def is_image(data):
+    try:
+        Image.open(BytesIO(data))
+        return True
+    except IOError:
+        return False
+
+def user_prompt_image(image):
+    # scale/convert image
+    image.thumbnail(size=SIZE)
+    image = image.convert('RGB')
+
+    # base64
+    buffered = BytesIO()
+    image.save(buffered, format='jpeg')
+    base64_image = base64.b64encode(buffered.getvalue()).decode('utf-8')
+
+    return {'role': 'user', 'content': [{'type': 'image_url', 'image_url': {'url': f'data:image/jpeg;base64,{base64_image}'}}]}
+
+def user_prompt_text(text):
+    text = text.strip()
+    return {'role': 'user', 'content': text}
+
+if __name__ == '__main__':
+    stdin = parse_stdin() 
+
+    if not stdin:
+        print('no input')
+        sys.exit(1)
+
+    if is_image(stdin):
+        image = Image.open(BytesIO(stdin))
+        user_prompt = user_prompt_image(image)
+    else:
+        text = stdin.decode('utf-8')
+        user_prompt = user_prompt_text(text)
+
+    client = openai.OpenAI()
+
+    completion = client.chat.completions.create(
+        model=MODEL,
+        temperature=TEMPERATURE,
+        messages= [
+            {'role': 'system', 'content': prompt.SYSTEM_PROMPT},
+            user_prompt,
+        ]
+    )
+
+    response = completion.choices[0].message.content
+    print(response)

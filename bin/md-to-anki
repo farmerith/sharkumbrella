@@ -1,0 +1,63 @@
+#! /bin/python -B
+
+import sys
+import argparse
+import requests
+import subprocess
+
+DECK = 'test'
+
+def parse_stdin():
+    return [i.strip() for i in sys.stdin.readlines()] if not sys.stdin.isatty() else None
+
+def add_note(font, back, deck='test'):
+    payload = {
+        'action': 'addNote',
+        'version': 6,
+        'params': {
+            'note': {
+                'deckName': deck,
+                'modelName': 'Basic',
+                'fields': {
+                    'Front': front,
+                    'Back': back
+                },
+                'options': {
+                    'allowDuplicate': False,
+                    'duplicateScope': 'deck',
+                    'duplicateScopeOptions': {
+                        'deckName': deck,
+                        'checkChildren': False,
+                        'checkAllModels': False 
+                    }
+                },
+            }
+        }
+    }
+
+    url = 'http://localhost:8765'
+
+    try:
+        response = requests.post(url, json=payload)
+        response.raise_for_status()
+        result = response.json()
+        if result.get('error'):
+            print(f'Error adding note: {result['error']}', file=sys.stderr)
+            sys.exit(1)
+    except requests.exceptions.RequestException as e:
+        print(f'Error communicating with AnkiConnect: {e}', file=sys.stderr)
+        sys.exit(1)
+
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser()
+    parser.add_argument('input', nargs='*', default=parse_stdin()) 
+    args = parser.parse_args()
+
+    for line in args.input:
+        # assume markdown table format
+        front, back = line.split('|')[1:-1]
+
+        if not front or not back:
+            continue
+
+        add_note(front, back, deck=DECK)

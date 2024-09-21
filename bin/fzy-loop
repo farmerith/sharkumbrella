@@ -1,0 +1,31 @@
+#! /bin/python -B
+
+import sys
+import subprocess
+
+def parse_stdin():
+    return [i.strip() for i in sys.stdin.readlines()] if not sys.stdin.isatty() else None
+
+if __name__ == '__main__':
+    selected = []
+    options = parse_stdin()
+
+    while options:
+        try:
+            result = subprocess.run(['fzf', '--wrap', '--wrap-sign=', '--no-bold', '--reverse', '--no-sort', '--keep-right'], input='\n'.join(options), capture_output=True, text=True, check=True).stdout.strip()
+        except: 
+            break
+
+        selected.append(result)
+
+        index = options.index(result)
+        options.remove(result)
+
+        if index == len(options):
+            index -= 1
+
+        for _ in range(index):
+            options.append(options.pop(0))
+    
+    for elem in selected:
+        print(elem)
